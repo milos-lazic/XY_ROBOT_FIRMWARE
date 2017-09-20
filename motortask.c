@@ -13,6 +13,7 @@
 #include "libs/bcm2836/bcm2836.h"
 
 
+#define DELAY_1_MS   1000000
 #define DELAY_10_MS 10000000
 
 /* Global (application-wide) variables */
@@ -23,24 +24,107 @@ static MotorTask_Sm_State           state = eMT_State_INIT;
 static CmdProc_Motor_Cmd_Struct     cmd; // most recent command
 static bcm2836_Peripheral           gpio;
 
+static Motor_Struct                 Motor[eMT_NUM_MOTORS] =
+{
+	/* eMT_MotorID_MotorA */ { .mSigDIR = BCM2836_GPIO_PIN_5, . mSigSTEP = BCM2836_GPIO_PIN_6 },
+	/* eMT_MotorID_MotorB */ { .mSigDIR = BCM2836_GPIO_PIN_13, .mSigSTEP = BCM2836_GPIO_PIN_19 },
+};
+
 /* Local functions */
+
+static void MotorTask_stepCCW( MotorTask_Motor_Id index, unsigned int steps)
+{
+	int i;
+	struct timespec ts = { .tv_sec = 0, .tv_nsec = DELAY_1_MS };
+
+	/* NOTE: When BigEasyDrive v1.2 DIR input is HIGH, driver
+	         will step in CCW direction on rising edge of 
+	         STEP input
+	 */
+
+	/* set direction to counter-clock-wise */
+	bcm2836_GPIOSetPinLevel( &gpio, Motor[index].mSigDIR, BCM2836_GPIO_PIN_LEVEL_HIGH);
+
+	for ( i = 0; i < steps; i++)
+	{
+		/* steps occur on RISING edge - set STEP signal
+		   LOW, then immediately to HIGH
+		 */
+
+		bcm2836_GPIOSetPinLevel( &gpio, Motor[index].mSigSTEP, BCM2836_GPIO_PIN_LEVEL_LOW);
+		bcm2836_GPIOSetPinLevel( &gpio, Motor[index].mSigSTEP, BCM2836_GPIO_PIN_LEVEL_HIGH);
+
+		nanosleep( &ts, NULL);
+	}
+}
+
+
+static void MotorTask_stepCW( MotorTask_Motor_Id index, unsigned int steps)
+{
+	int i;
+	struct timespec ts = { .tv_sec = 0, .tv_nsec = DELAY_1_MS };
+
+	/* NOTE: When BigEasyDrive v1.2 DIR input is LOW, driver
+	         will step in CW direction on rising edge of 
+	         STEP input
+	 */
+
+	/* set direction to counter-clock-wise */
+	bcm2836_GPIOSetPinLevel( &gpio, Motor[index].mSigDIR, BCM2836_GPIO_PIN_LEVEL_LOW);
+
+	for ( i = 0; i < steps; i++)
+	{
+		/* steps occur on RISING edge - set STEP signal
+		   LOW, then immediately to HIGH
+		 */
+
+		bcm2836_GPIOSetPinLevel( &gpio, Motor[index].mSigSTEP, BCM2836_GPIO_PIN_LEVEL_LOW);
+		bcm2836_GPIOSetPinLevel( &gpio, Motor[index].mSigSTEP, BCM2836_GPIO_PIN_LEVEL_HIGH);
+
+		nanosleep( &ts, NULL);
+	}
+}
+
+
+static void MotorTask_step( MotorTask_Motor_Id index, int steps)
+{
+	/* NOTE: for positive values of 'steps' argument, driver steps CCW;
+	         for negative values of 'steps' argument, driver steps CW
+	 */
+
+	if ( steps >= 0)
+	{
+		MotorTask_stepCCW( index, steps);
+	}
+	else
+	{
+		MotorTask_stepCW( index, steps);
+	}
+}
+
+
 
 static void MotorTask_SmState_InitFxn( void)
 {
 	// state machine Init state function
 	
-	int s;
+	int rv;
 
 	/* initialize GPIO peripheral */
-	s = bcm2836_initPeripheral( &gpio, BCM2836_GPIO_PERIPH_BYTE_LEN, BCM2836_GPIO_PERIPH_BASE_ADR);
-	if ( s == - 1)
+	rv = bcm2836_initPeripheral( &gpio, BCM2836_GPIO_PERIPH_BYTE_LEN, BCM2836_GPIO_PERIPH_BASE_ADR);
+	if ( rv == - 1)
 	{
 		perror("bcm2836_initPeripheral");	
 	}
 
-	bcm2836_GPIOPinTypeOutput( &gpio, BCM2836_GPIO_PIN_4);
-	bcm2836_GPIOSetPinLevel( &gpio, BCM2836_GPIO_PIN_4, BCM2836_GPIO_PIN_LEVEL_LOW);
+	/* Configure GPIOs controlling motors */
+	for ( int i = 0; i < eMT_NUM_MOTORS; i++)
+	{
+		bcm2836_GPIOPinTypeOutput( &gpio, Motor[i].mSigDIR);
 
+		bcm2836_GPIOPinTypeOutput( &gpio, Motor[i].mSigSTEP);
+		bcm2836_GPIOSetPinLevel( &gpio, Motor[i].mSigSTEP, BCM2836_GPIO_PIN_LEVEL_HIGH);
+	}
 
 
 	state = eMT_State_IDLE;
@@ -88,6 +172,21 @@ static void MotorTask_SmState_StepFxn( void)
 	// do work
 
 	write( STDOUT_FILENO, "MotorTask_SmState_StepFxn\r\n", 28);
+
+	switch( cmd.cmdParams.stepCmdParams.mtrID)
+	{
+
+	case eCmd_Motor_Id_MOTORA:
+		MotorTask_step( eMT_MotorID_MotorA, cmd.cmdParams.stepCmdParams.steps);
+		break;
+
+	case eCmd_Motor_Id_MOTORB:
+		MotorTask_step( eMT_MotorID_MotorB, cmd.cmdParams.stepCmdParams.steps);
+		break;
+
+	default:
+		break;
+	}
 
 	state = eMT_State_IDLE;
 }

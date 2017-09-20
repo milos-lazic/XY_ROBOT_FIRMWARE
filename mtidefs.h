@@ -3,6 +3,8 @@
 
 #include "libs/bcm2836/bcm2836.h"
 
+#define STEP_ANGLE    212   /* milli-degrees per step */
+
 typedef enum
 {
 	eMT_State_INIT = 0,
@@ -25,9 +27,17 @@ typedef enum
 
 typedef struct 
 {
-	e_bcm2836_GPIO_Pin     mSigDIR;
-	e_bcm2836_GPIO_Pin     mSigSTEP;
+	e_bcm2836_GPIO_Pin     mSigDIR;    // DIR signal GPIO pin index
+	e_bcm2836_GPIO_Pin     mSigSTEP;   // STEP signal GPIO pin index
+	int                    angle;      // current motor angle in milli-degrees
 
 } Motor_Struct;
+
+
+typedef struct
+{
+	MotorTask_Motor_Id     mID;
+	int                    delta;
+} MotorTask_GoTo_Thread_Arg;
 
 #endif

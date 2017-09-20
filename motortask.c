@@ -26,8 +26,9 @@ static bcm2836_Peripheral           gpio;
 
 static Motor_Struct                 Motor[eMT_NUM_MOTORS] =
 {
-	/* eMT_MotorID_MotorA */ { .mSigDIR = BCM2836_GPIO_PIN_5, . mSigSTEP = BCM2836_GPIO_PIN_6 },
-	/* eMT_MotorID_MotorB */ { .mSigDIR = BCM2836_GPIO_PIN_13, .mSigSTEP = BCM2836_GPIO_PIN_19 },
+	                           /* Connected to DIR on BED */   /* Connected to STEP on BED */   /* intial angle */
+	/* eMT_MotorID_MotorA */ { .mSigDIR = BCM2836_GPIO_PIN_5,  .mSigSTEP = BCM2836_GPIO_PIN_6,  .angle = 0 },
+	/* eMT_MotorID_MotorB */ { .mSigDIR = BCM2836_GPIO_PIN_13, .mSigSTEP = BCM2836_GPIO_PIN_19, .angle = 0 },
 };
 
 /* Local functions */
@@ -35,7 +36,7 @@ static Motor_Struct                 Motor[eMT_NUM_MOTORS] =
 static void MotorTask_stepCCW( MotorTask_Motor_Id index, unsigned int steps)
 {
 	int i;
-	struct timespec ts = { .tv_sec = 0, .tv_nsec = DELAY_1_MS };
+	struct timespec ts_1ms = { .tv_sec = 0, .tv_nsec = DELAY_1_MS };
 
 	/* NOTE: When BigEasyDrive v1.2 DIR input is HIGH, driver
 	         will step in CCW direction on rising edge of 
@@ -54,15 +55,18 @@ static void MotorTask_stepCCW( MotorTask_Motor_Id index, unsigned int steps)
 		bcm2836_GPIOSetPinLevel( &gpio, Motor[index].mSigSTEP, BCM2836_GPIO_PIN_LEVEL_LOW);
 		bcm2836_GPIOSetPinLevel( &gpio, Motor[index].mSigSTEP, BCM2836_GPIO_PIN_LEVEL_HIGH);
 
-		nanosleep( &ts, NULL);
+		nanosleep( &ts_1ms, NULL);
 	}
+
+	/* update motor angle */
+	Motor[index].angle += STEP_ANGLE;
 }
 
 
 static void MotorTask_stepCW( MotorTask_Motor_Id index, unsigned int steps)
 {
 	int i;
-	struct timespec ts = { .tv_sec = 0, .tv_nsec = DELAY_1_MS };
+	struct timespec ts_1ms = { .tv_sec = 0, .tv_nsec = DELAY_1_MS };
 
 	/* NOTE: When BigEasyDrive v1.2 DIR input is LOW, driver
 	         will step in CW direction on rising edge of 
@@ -81,8 +85,11 @@ static void MotorTask_stepCW( MotorTask_Motor_Id index, unsigned int steps)
 		bcm2836_GPIOSetPinLevel( &gpio, Motor[index].mSigSTEP, BCM2836_GPIO_PIN_LEVEL_LOW);
 		bcm2836_GPIOSetPinLevel( &gpio, Motor[index].mSigSTEP, BCM2836_GPIO_PIN_LEVEL_HIGH);
 
-		nanosleep( &ts, NULL);
+		nanosleep( &ts_1ms, NULL);
 	}
+
+	/* update motor angle */
+	Motor[index].angle -= STEP_ANGLE;
 }
 
 
@@ -98,8 +105,16 @@ static void MotorTask_step( MotorTask_Motor_Id index, int steps)
 	}
 	else
 	{
-		MotorTask_stepCW( index, steps);
+		MotorTask_stepCW( index, -1*steps);
 	}
+}
+
+
+static void* MotorTask_GoTo_StartRoutine( void *arg)
+{
+	MotorTask_GoTo_Thread_Arg *p = (MotorTask_GoTo_Thread_Arg *) arg;
+
+	MotorTask_step( p->mID, p->delta);
 }
 
 
@@ -196,7 +211,36 @@ static void MotorTask_SmState_GoToFxn( void)
 {
 	// do work
 
+	MotorTask_GoTo_Thread_Arg        argA, argB;
+	pthread_t                        motorA_threadHandle, motorB_threadHandle;
+
 	write( STDOUT_FILENO, "MotorTask_SmState_GoToFxn\r\n", 28);
+
+	/* lookuptable() - for given posX and posY determine
+	                   the required motor angles
+	 */
+
+	/* MLAZIC_TBD: fake deltas for testing */
+	argA.delta = 45000 / STEP_ANGLE; /* rotate +45 degrees */
+	argB.delta = -45000 / STEP_ANGLE; /* rotate -45 degrees */
+	/* MLAZIC_END */
+
+	// argA.delta = (req_angle_A - current_angle_A) / DEGREES_PER_STEP
+	argA.mID   = eMT_MotorID_MotorA;
+
+	// argB.delta = (req_angle_B - current_andle_B) / DEGREES_PER_STEP
+	argB.mID   = eMT_MotorID_MotorB;
+
+	/* create sub-thread A */
+	pthread_create( &motorA_threadHandle, NULL, MotorTask_GoTo_StartRoutine, &argA);
+
+	/* create sub-thread B */
+	pthread_create( &motorB_threadHandle, NULL, MotorTask_GoTo_StartRoutine, &argB);
+
+
+	pthread_join( motorA_threadHandle, NULL);
+	pthread_join( motorB_threadHandle, NULL);
+
 
 	state = eMT_State_IDLE;
 }

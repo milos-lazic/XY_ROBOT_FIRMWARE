@@ -33,29 +33,48 @@ static int CmdProc_Cmd_Queue_isFull( CmdProc_Motor_Cmd_Queue *handle);
 
 
 
-
+/*
+ *  ======== CmProc_getCmdStr ========
+ *  Wrapper function - calls Linux system function 'read' to get contents
+ *  of server socket buffer.
+ *
+ *  Args:     handle - client socket handle (file descriptor)
+ *
+ *            buffer - pointer to data (string) storage buffer
+ *
+ *            size - size of storage buffer in bytes
+ *  
+ *  Return:   number of character read from client TCP socket
+ *
+ *  Notes:
+ */
 static int CmProc_getCmdStr( int handle, char *buffer, size_t size)
 {
 	return read( handle, (void *)buffer, size);
 }
 
 
-/* return 0 IF successful, ELSE -1 */
+/*
+ *  ======== CmdProc_parseMtrCmd ========
+ *  Parse a motor command.
+ *
+ *  Args:     cmd - pointer to command string buffer
+ *  
+ *  Return:   0 IF command is valid, and has been insrted into
+ *            motor command queue; ELSE -1
+ *
+ *  Notes:    1) IMPORTANT: Motor command MUST adhere to the following format:
+ *
+ *               AT!MTR_CMD=<COMMAND_ID>,<PARAM0>,<PARAM1>,<PARAM3>
+ *
+ *               Valid commands:
+ *
+ *               	AT!MTR_CMD=STEP,<MOTORID>,<STEP_COUNT>,<NULL>
+ *
+ *               	AT!MTR_CMD=GOTO,<MOTORID>,<ANGLE>,<NULL>
+ */
 static int CmdProc_parseMtrCmd( const char *cmdStr)
 {
-	/* IMPORTANT:
-	 * Motor commands MUST adhere to the following format:
-	 *
-	 * AT!MTR_CMD=<COMMAND_ID>,<PARAM0>,<PARAM1>,<PARAM2>,<PARAM3>
-	 *
-	 * Valid commands:
-	 *
-	 *      AT!MTR_CMD=STEP,<MOTORID>,<STEP_COUNT>,<NULL>
-	 *
-	 *      AT!MTR_CMD=GOTO,<MOTORID>,<ANGLE>,<NULL>
-	 *
-	 */
-
 	char *cmdID;
 	char *param0, *param1;
 	CmdProc_Motor_Cmd_Struct cmd;
@@ -111,7 +130,17 @@ static int CmdProc_parseMtrCmd( const char *cmdStr)
 }
 
 
-/* return 0 IF valid command, ELSE -1 */
+/*
+ *  ======== CmdProc_processCmd ========
+ *  General command processing function.
+ *
+ *  Args:     cmd - pointer to command string buffer
+ *  
+ *  Return:   0 IF command is valid, and has been insrted into
+ *            the appropriate queue; ELSE -1
+ *
+ *  Notes:
+ */
 static int CmdProc_processCmd( const char *cmd)
 {
 	char *scanptr = (char *)cmd;
@@ -147,11 +176,26 @@ static int CmdProc_processCmd( const char *cmd)
 		// invalid command
 		return -1;
 	}
+
+	// success
 	return 0;
 }
 
 
-
+/*
+ *  ======== CmdProc_SmState_InitFxn ========
+ *  Routine to execute while state machine is in 'Initializing' state.
+ *
+ *  Args:     none
+ *  
+ *  Return:   none
+ *
+ *  Notes:    1) In this state the command server is initialized; a server
+ *               TCP socket is opened and binded to the local host on port
+ *               PORT - as defined in cpidefs.h.
+ *
+ *            2) The 'Init' state is always followed by 'Listen' state.
+ */
 static void CmdProc_SmState_InitFxn( void)
 {
 	// state machine Init state function
@@ -233,6 +277,18 @@ static void CmdProc_SmState_InitFxn( void)
 }
 
 
+/*
+ *  ======== CmdProc_SmState_ListenFxn ========
+ *  Routine to execute while state machine is in 'Listening' state.
+ *
+ *  Args:     none
+ *  
+ *  Return:   none
+ *
+ *  Notes:    1) In this state the command server is listening for
+ *               new connections; no commands may be received until
+ *               a connection is accepted (with a call to accept()).
+ */
 static void CmdProc_SmState_ListenFxn( void)
 {
 	// state machine Listen state function
@@ -283,7 +339,23 @@ static void CmdProc_SmState_ListenFxn( void)
 	state = eCmd_State_LISTEN;
 }
 
-
+/*
+ *  ======== CmdProc_SmState_ConnectedFxn ========
+ *  Routine to execute while state machine is in 'Connected' state.
+ *
+ *  Args:     none
+ *  
+ *  Return:   none
+ *
+ *  Notes:    1) In this state the command server has accepted a connection
+ *               from a client. If a new client attempts to connect to the 
+ *               server, it will be rejected (only one client may be serviced
+ *               at a time).
+ *
+ *            2) In this state the command server receives commands from a
+ *               connected client and calls CmdProc_processCmd to process
+ *               those commands.
+ */
 static void CmdProc_SmState_ConnectedFxn( void)
 {
 	// state machine Connected state function
@@ -361,6 +433,17 @@ static void CmdProc_SmState_ConnectedFxn( void)
 }
 
 
+/*
+ *  ======== CmdProc_Sm_Run ========
+ *  Handles transition between state machine states.
+ *
+ *  Args:     none
+ *  
+ *  Return:   none
+ *
+ *  Notes:    To determine which state to transition the machine
+ *            to, CmdProc_Sm_Run checks the global variable 'state'.
+ */
 static void CmdProc_Sm_Run( void)
 {
 	switch( state)
@@ -385,6 +468,23 @@ static void CmdProc_Sm_Run( void)
 }
 
 
+/*
+ *  ======== CmdProc_Cmd_Queue_Init ========
+ *  Initialize a command queue.
+ *
+ *  Args:     handle - pointer to uninitialized command queue
+ *  
+ *  Return:   0 IF successful; ELSE -1
+ *
+ *  Notes:    1) This function must be called to initialize a
+ *               command queue before any of the following
+ *               queue APIs can be safely used:
+ *
+ *               	CmdProc_Cmd_Queue_isEmpty
+ *               	CmdProc_Cmd_Queue_isFull
+ *               	CmdProc_Cmd_Queue_Get
+ *                	CmdProc_Cmd_Queue_Put
+ */
 int CmdProc_Cmd_Queue_Init( CmdProc_Motor_Cmd_Queue *handle)
 {
 	int s;
@@ -406,20 +506,57 @@ int CmdProc_Cmd_Queue_Init( CmdProc_Motor_Cmd_Queue *handle)
 }
 
 
+/*
+ *  ======== CmdProc_Cmd_Queue_isEmpty ========
+ *  Check if initialized queue is empty.
+ *
+ *  Args:     handle - pointer to initialized queue
+ *  
+ *  Return:   1 IF queue is empty; ELSE 0
+ *
+ *  Notes:
+ */
 static int CmdProc_Cmd_Queue_isEmpty( CmdProc_Motor_Cmd_Queue *handle)
 {
-	// return 1 if empty; 0 if contains elements
 	return ((handle->in == handle->out) ? 1 : 0);
 }
 
+
+/*
+ *  ======== CmdProc_Cmd_Queue_isFull ========
+ *  Check if initialized queue is full.
+ *
+ *  Args:     handle - pointer to initialized queue
+ *  
+ *  Return:   1 IF queue is full; ELSE 0
+ *
+ *  Notes:
+ */
 static int CmdProc_Cmd_Queue_isFull( CmdProc_Motor_Cmd_Queue *handle)
 {
-	// return 1 IF full; ELSE 0
 	return ( ( (handle->in == handle->out -1) || 
 	           (handle->in == &(handle->queue[MAX_CMD_QUEUE_BACKLOG-1]) && handle->out == &handle->queue[0])) ? 1 : 0);
 	           
 }
 
+
+/*
+ *  ======== CmdProc_Cmd_Queue_Put ========
+ *  Insert command into the initialized queue pointed to by handle.
+ *
+ *  Args:     handle - pointer to initialized queue
+ *  
+ *            cmd - pointer to command object to copy from
+ *
+ *  Return:   O IF operation is successful; ELSE -1
+ *
+ *  Notes:    1) Queues are statically allocated (without the use of malloc()
+ *               family of functions). When a command is inserted by calling
+ *               CmdProc_Cmd_Queue_Put, the pointer to the next array entry to
+ *               insert to is incremented; the function malloc() is not called.
+ *
+ *            2) If the queue is full, CmdProc_Cmd_Queue_Get returns -1.
+ */
 int CmdProc_Cmd_Queue_Put( CmdProc_Motor_Cmd_Queue         *handle,
 	                       CmdProc_Motor_Cmd_Struct        *cmd)
 {
@@ -463,7 +600,26 @@ int CmdProc_Cmd_Queue_Put( CmdProc_Motor_Cmd_Queue         *handle,
 }
 
 
-// Notes: returns immediately if buffer is empty
+/*
+ *  ======== CmdProc_Cmd_Queue_Get ========
+ *  Retrieve command from the initialized queue pointed to by handle.
+ *
+ *  Args:     handle - pointer to initialized queue
+ *  
+ *            cmdOutBuf - pointer to buffer into which contents of retrieved
+ *                        command is to be stored prior to its entry in the 
+ *                        queue being "freed". If cmdOutBuf is NULL, the 
+ *                        copying of the queue entry does not take place. 
+ *
+ *  Return:   O IF operation is successful; ELSE -1
+ *
+ *  Notes:    1) Queues are statically allocated (without the use of malloc()
+ *               family of functions). When a command is retrieved by calling
+ *               CmdProc_Cmd_Queue_Get, the pointer to the next array entry to
+ *               retrieve from is incremented; the function free() is not called.
+ *
+ *            2) If the queue is empty, CmdProc_Cmd_Queue_Get returns -1.
+ */
 int CmdProc_Cmd_Queue_Get( CmdProc_Motor_Cmd_Queue         *handle,
 	                       CmdProc_Motor_Cmd_Struct        *cmdOutBuf)
 {
@@ -512,11 +668,25 @@ int CmdProc_Cmd_Queue_Get( CmdProc_Motor_Cmd_Queue         *handle,
 
 
 
+
+/*
+ *  ======== CmdProc_heartbeatFxn ========
+ *  Command process task function. Starts state machine which waits (blocks)
+ *  until command is received via stream (TCP) socket and processes it.
+ *
+ *  Args:     arg - optional argument; passed in when task is created
+ *                  in call to pthread_create()
+ *
+ *  Return:   Thread immediately marks itself as detached; return value is
+ *            ignored and resources are released automatically.
+ *
+ *  Notes:
+ */
 void* CmdProc_heartbeatFxn( void *arg)
 {
 
 	pthread_detach( pthread_self());
-
+ 
 	printf("%s (%d) - cmd proc task initialized...\n", __FILE__, __LINE__);
 
 	while(1)

@@ -1,3 +1,7 @@
+// Copyright(c) 2017 Pacific Robotics
+// Author: Milos Lazic
+
+
 #define _POSIX_C_SOURCE 200112L
 
 #include <stdio.h>

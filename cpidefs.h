@@ -1,3 +1,6 @@
+// Copyright(c) 2017 Pacific Robotics
+// Author: Milos Lazic
+
 #ifndef _CP_IDEFS_H_
 #define _CP_IDEFS_H_
 
@@ -16,6 +19,14 @@
 #define MOTOR_CMD_TOK        "MTR_CMD="
 
 
+/*
+ *  ======== CmdProc_Sm_State ========
+ *  Descr: Enumeration of command process state machine states.
+ *
+ *  Members:
+ *
+ *  Notes:
+ */
 typedef enum 
 {
 	eCmd_State_INIT = 0,

@@ -1,5 +1,10 @@
-app: main.o cmdproctask.o motortask.o
-	gcc -o app main.o cmdproctask.o motortask.o -pthread libs/bcm2836/libbcm2836.a
+# OBJECT FILES
+objects = main.o \
+          cmdproctask.o \
+          motortask.o
+
+app: $(objects)
+	gcc -o app $(objects) -pthread libs/bcm2836/libbcm2836.a
 
 main.o: main.c
 	gcc -c -std=c99 main.c
@@ -10,6 +15,7 @@ cmdproctask.o: cmdproctask.c
 motortask.o: motortask.c
 	gcc -c -std=c99 motortask.c
 
+.PHONY: clean
 clean:
-	rm -f *.o
+	rm -f $(objects)
 

@@ -1,3 +1,6 @@
+// Copyright(c) 2017 Pacific Robotics
+// Author: Milos Lazic
+
 #ifndef _MT_PROTO_H_
 #define _MT_PROTO_H_
 

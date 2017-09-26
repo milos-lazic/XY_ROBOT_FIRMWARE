@@ -1,3 +1,6 @@
+// Copyright(c) 2017 Pacific Robotics
+// Author: Milos Lazic
+
 #define _POSIX_C_SOURCE 199309L
 
 #include <stdio.h>
@@ -24,6 +27,7 @@ static MotorTask_Sm_State           state = eMT_State_INIT;
 static CmdProc_Motor_Cmd_Struct     cmd; // most recent command
 static bcm2836_Peripheral           gpio;
 
+/* contains instances of Motor_Struct objects; must be in same order as MotorTask_Motor_Id enumeration. */
 static Motor_Struct                 Motor[eMT_NUM_MOTORS] =
 {
 	                           /* Connected to DIR on BED */   /* Connected to STEP on BED */   /* intial angle */

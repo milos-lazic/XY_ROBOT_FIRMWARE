@@ -439,7 +439,7 @@ static void CmdProc_SmState_ConnectedFxn( void)
 
 /*
  *  ======== CmdProc_Sm_Run ========
- *  Handles transition between state machine states.
+ *  Handles transition between command process task state machine states.
  *
  *  Args:     none
  *  

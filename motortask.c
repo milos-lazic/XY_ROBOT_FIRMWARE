@@ -33,6 +33,20 @@ static Motor_Struct                 Motor[eMT_NUM_MOTORS] =
 
 /* Local functions */
 
+/*
+ *  ======== MotorTask_stepCCW ========
+ *  Rotate N steps in counter-clock-wise sense.
+ *
+ *  Args:     index - reference to motor (corresponding to apporpriate
+ *                    entry in Motor array)
+ *
+ *            steps - number of steps to rotate
+ *  
+ *  Return:   none
+ *
+ *  Notes:    1) MotorTask_step makes sub-calls to direction-specific
+ *               MotorTask_stepCW and MotorTask_stepCCW.
+ */
 static void MotorTask_stepCCW( MotorTask_Motor_Id index, unsigned int steps)
 {
 	int i;
@@ -63,6 +77,20 @@ static void MotorTask_stepCCW( MotorTask_Motor_Id index, unsigned int steps)
 }
 
 
+/*
+ *  ======== MotorTask_stepCW ========
+ *  Rotate N steps in clock-wise sense.
+ *
+ *  Args:     index - reference to motor (corresponding to apporpriate
+ *                    entry in Motor array)
+ *
+ *            steps - number of steps to rotate
+ *  
+ *  Return:   none
+ *
+ *  Notes:    1) MotorTask_step makes sub-calls to direction-specific
+ *               MotorTask_stepCW and MotorTask_stepCCW.
+ */
 static void MotorTask_stepCW( MotorTask_Motor_Id index, unsigned int steps)
 {
 	int i;
@@ -93,6 +121,23 @@ static void MotorTask_stepCW( MotorTask_Motor_Id index, unsigned int steps)
 }
 
 
+/*
+ *  ======== MotorTask_step ========
+ *  Rotate N steps.
+ *
+ *  Args:     index - reference to motor (corresponding to apporpriate
+ *                    entry in Motor array)
+ *
+ *            steps - number of steps to rotate (sign determines direction)
+ *  
+ *  Return:   none
+ *
+ *  Notes:    1) For positive value of 'steps' argument, driver steps CCW;
+ *               For negative value of 'steps' argument, driver steps CW.
+ *
+ *            2) MotorTask_step makes sub-calls to direction-specific
+ *               MotorTask_stepCW and MotorTask_stepCCW.
+ */
 static void MotorTask_step( MotorTask_Motor_Id index, int steps)
 {
 	/* NOTE: for positive values of 'steps' argument, driver steps CCW;
@@ -110,6 +155,21 @@ static void MotorTask_step( MotorTask_Motor_Id index, int steps)
 }
 
 
+/*
+ *  ======== MotorTask_GoTo_StartRoutine ========
+ *  Routine to invoke when sub threads are created by MotorTask_SmState_GoToFxn.
+ *
+ *  Args:     arg - pointer to object containing motor ID and
+ *                  step number
+ *  
+ *  Return:   none
+ *
+ *  Notes:    1) arg must be casted to MotorTask_GoTo_Thread_Arg type
+ *               so that it may be dereferenced and the motor ID, step
+ *               number values can be extracted.
+ *
+ *            2) Upon completion thread joins with the master thread.
+ */
 static void* MotorTask_GoTo_StartRoutine( void *arg)
 {
 	MotorTask_GoTo_Thread_Arg *p = (MotorTask_GoTo_Thread_Arg *) arg;
@@ -119,6 +179,20 @@ static void* MotorTask_GoTo_StartRoutine( void *arg)
 
 
 
+/*
+ *  ======== MotorTask_SmState_InitFxn ========
+ *  Routine to execute while state machine is in 'Init' state.
+ *
+ *  Args:     none
+ *  
+ *  Return:   none
+ *
+ *  Notes:    1) Initial state entered by the motor task FSM; used
+ *               to perform peripheral (GPIO) initialisation. Loops
+ *               through members of Motor array and intializes the
+ *               corresponding GPIO pins as digital outputs to drive
+ *               DIR and STEP pins on BigEasyDriver.
+ */
 static void MotorTask_SmState_InitFxn( void)
 {
 	// state machine Init state function
@@ -145,6 +219,20 @@ static void MotorTask_SmState_InitFxn( void)
 	state = eMT_State_IDLE;
 }
 
+
+/*
+ *  ======== MotorTask_SmState_IdleFxn ========
+ *  Routine to execute while state machine is in 'Idle' state.
+ *
+ *  Args:     none
+ *  
+ *  Return:   none
+ *
+ *  Notes:    1) In this state the command queue is polled for
+ *               new commands. If a command is received a switch
+ *               case determines which state the FSM will transition
+ *               to.
+ */
 static void MotorTask_SmState_IdleFxn( void)
 {
 	// state machine Idle state function
@@ -181,6 +269,25 @@ static void MotorTask_SmState_IdleFxn( void)
 }
 
 
+/*
+ *  ======== MotorTask_SmState_StepFxn ========
+ *  Routine to execute while state machine is in 'Step' state.
+ *
+ *  Args:     none
+ *  
+ *  Return:   none
+ *
+ *  Notes:    1) This state is entered when the command to step
+ *               is received. Depending on the motor ID embedded
+ *               in the received command, the corresponding motor
+ *               will be driven a specified number of steps. The
+ *               sign of the steps member of the command packet
+ *               determines the direction of stepping and the 
+ *               appropriate subroutine to invoke.
+ *
+ *            2) This state is entered when MTR_CMD=STEP is issued;
+ *               used for testing.
+ */
 static void MotorTask_SmState_StepFxn( void)
 {
 
@@ -207,6 +314,23 @@ static void MotorTask_SmState_StepFxn( void)
 }
 
 
+/*
+ *  ======== MotorTask_SmState_GoToFxn ========
+ *  Routine to execute while state machine is in 'GoTo' state.
+ *
+ *  Args:     none
+ *  
+ *  Return:   none
+ *
+ *  Notes:    1) This state is entered when the command to go to
+ *               a specified cartesian coordinate is received. The 
+ *               corresponding motor shaft angles are determined 
+ *               by look-up from a table. Two sub-threads are created
+ *               and will independently drive each stepper motor to
+ *               their required positions. Each thread is joined with
+ *               the master thread upon completion and the state machine
+ *               reverts to 'Idle' state.
+ */
 static void MotorTask_SmState_GoToFxn( void)
 {
 	// do work
@@ -246,6 +370,17 @@ static void MotorTask_SmState_GoToFxn( void)
 }
 
 
+/*
+ *  ======== MotorTask_Sm_Run ========
+ *  Handles transition between motor task state machine states.
+ *
+ *  Args:     none
+ *  
+ *  Return:   none
+ *
+ *  Notes:    To determine which state to transition the machine
+ *            to, MotorTask_Sm_Run checks the global variable 'state'.
+ */
 static void MotorTask_Sm_Run( void)
 {
 	switch( state)
@@ -274,7 +409,19 @@ static void MotorTask_Sm_Run( void)
 }
 
 
-
+/*
+ *  ======== MotorTask_heartbeatFxn ========
+ *  Motor driver task function. Starts state machine which waits (polls)
+ *  until command is available via global command queue.
+ *
+ *  Args:     arg - optional argument; passed in when task is created
+ *                  in call to pthread_create()
+ *
+ *  Return:   Thread immediately marks itself as detached; return value is
+ *            ignored and resources are released automatically.
+ *
+ *  Notes:
+ */
 void* MotorTask_heartbeatFxn( void *arg)
 {
 	struct timespec ts = { .tv_sec = 0, .tv_nsec = DELAY_10_MS };

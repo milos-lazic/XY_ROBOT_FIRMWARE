@@ -28,11 +28,11 @@ static CmdProc_Motor_Cmd_Struct     cmd; // most recent command
 static bcm2836_Peripheral           gpio;
 
 /* contains instances of Motor_Struct objects; must be in same order as MotorTask_Motor_Id enumeration. */
-static Motor_Struct                 Motor[eMT_NUM_MOTORS] =
+static volatile Motor_Struct        Motor[eMT_NUM_MOTORS] =
 {
 	                           /* Connected to DIR on BED */   /* Connected to STEP on BED */   /* intial angle */
-	/* eMT_MotorID_MotorA */ { .mSigDIR = BCM2836_GPIO_PIN_5,  .mSigSTEP = BCM2836_GPIO_PIN_6,  .angle = 0 },
-	/* eMT_MotorID_MotorB */ { .mSigDIR = BCM2836_GPIO_PIN_13, .mSigSTEP = BCM2836_GPIO_PIN_19, .angle = 0 },
+	/* eMT_MotorID_MotorA */ { .mSigDIR = BCM2836_GPIO_PIN_19,  .mSigSTEP = BCM2836_GPIO_PIN_26,  .angle = 0 },
+	/* eMT_MotorID_MotorB */ { .mSigDIR = BCM2836_GPIO_PIN_10,  .mSigSTEP = BCM2836_GPIO_PIN_9,  .angle = 0 },
 };
 
 /* Local functions */
@@ -61,8 +61,10 @@ static void MotorTask_stepCCW( MotorTask_Motor_Id index, unsigned int steps)
 	         STEP input
 	 */
 
+	write( STDOUT_FILENO, "     MotorTask_stepCCW\n", 24);
+
 	/* set direction to counter-clock-wise */
-	bcm2836_GPIOSetPinLevel( &gpio, Motor[index].mSigDIR, BCM2836_GPIO_PIN_LEVEL_HIGH);
+	bcm2836_GPIOSetPinLevel( &gpio, Motor[index].mSigDIR, BCM2836_GPIO_PIN_LEVEL_LOW);
 
 	for ( i = 0; i < steps; i++)
 	{
@@ -105,8 +107,10 @@ static void MotorTask_stepCW( MotorTask_Motor_Id index, unsigned int steps)
 	         STEP input
 	 */
 
+	write( STDOUT_FILENO, "     MotorTask_stepCW\n", 23);
+
 	/* set direction to counter-clock-wise */
-	bcm2836_GPIOSetPinLevel( &gpio, Motor[index].mSigDIR, BCM2836_GPIO_PIN_LEVEL_LOW);
+	bcm2836_GPIOSetPinLevel( &gpio, Motor[index].mSigDIR, BCM2836_GPIO_PIN_LEVEL_HIGH);
 
 	for ( i = 0; i < steps; i++)
 	{

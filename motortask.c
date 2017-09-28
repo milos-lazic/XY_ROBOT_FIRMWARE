@@ -218,6 +218,8 @@ static void* MotorTask_GoTo_StartRoutine( void *arg)
 	MotorTask_GoTo_Thread_Arg *p = (MotorTask_GoTo_Thread_Arg *) arg;
 
 	MotorTask_step( p->mID, p->delta);
+
+	return NULL;
 }
 
 

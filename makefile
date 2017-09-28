@@ -1,21 +1,40 @@
-# OBJECT FILES
-objects = main.o \
-          cmdproctask.o \
-          motortask.o
 
-app: $(objects)
-	gcc -o app $(objects) -pthread libs/bcm2836/libbcm2836.a -lwiringPi
+CC = gcc
+CFLAGS = -std=c99 -Wall
+EXECUTABLE = app
+
+LIBS = -pthread \
+       -lwiringPi \
+       libs/bcm2836/libbcm2836.a
+
+SRC = cmdproctask.c \
+      motortask.c \
+      main.c
+
+OBJ = $(SRC:.c=.o)
+
+BIN = $(SRC:.c=)
+
+
+
+$(EXECUTABLE): $(OBJ)
+	@ echo [LINK]
+	@ $(CC) -o app $(OBJ) $(LIBS)
 
 main.o: main.c
-	gcc -c -std=c99 main.c
+	@ echo [CC $<]
+	@ $(CC) -c $(CFLAGS) $<
 
 cmdproctask.o: cmdproctask.c
-	gcc -c -std=c99 cmdproctask.c
+	@ echo [CC $<]
+	@ $(CC) -c $(CFLAGS) $<
 
 motortask.o: motortask.c
-	gcc -c -std=c99 motortask.c
+	@ echo [CC $<]
+	@ $(CC) -c $(CFLAGS) $<
 
 .PHONY: clean
 clean:
-	rm -f $(objects)
+	@ echo [Clean]
+	@ rm -f $(OBJ)
 

@@ -205,7 +205,7 @@ static void CmdProc_SmState_InitFxn( void)
 	// state machine Init state function
 
 	struct addrinfo       hints, *servinfo, *p;
-	socklen_t             sin_size;
+	// socklen_t             sin_size;
 	int                   rv;
 
 	int                   yes = 1;

@@ -4,7 +4,13 @@
 #ifndef _MT_IDEFS_H_
 #define _MT_IDEFS_H_
 
+#define _CONFIG_WIRINGPI_
+
+#ifdef _CONFIG_WIRINGPI_
+#include <wiringPi.h>
+#else
 #include "libs/bcm2836/bcm2836.h"
+#endif
 
 #define STEP_ANGLE    212   /* milli-degrees per step */
 
@@ -61,8 +67,13 @@ typedef enum
  */
 typedef struct 
 {
+#ifdef _CONFIG_WIRINGPI_
+	int                    mSigDIR;    // DIR signal GPIO pin index (wiringPI)
+	int                    mSigSTEP;   // STEP signal GPIO pin index (wiringPI)
+#else
 	e_bcm2836_GPIO_Pin     mSigDIR;    // DIR signal GPIO pin index
 	e_bcm2836_GPIO_Pin     mSigSTEP;   // STEP signal GPIO pin index
+#endif
 	int                    angle;      // current motor angle in milli-degrees
 
 } Motor_Struct;

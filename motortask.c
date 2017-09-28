@@ -13,7 +13,14 @@
 #include "mtudefs.h"
 #include "mtproto.h"
 #include "cpudefs.h"
+
+#define _CONFIG_WIRINGPI_
+
+#ifdef _CONFIG_WIRINGPI_
+#include <wiringPi.h>
+#else
 #include "libs/bcm2836/bcm2836.h"
+#endif
 
 
 #define DELAY_1_MS   1000000
@@ -25,14 +32,25 @@ extern CmdProc_Motor_Cmd_Queue cmdQueue;
 /* Local variables */
 static MotorTask_Sm_State           state = eMT_State_INIT;
 static CmdProc_Motor_Cmd_Struct     cmd; // most recent command
+
+#ifndef _CONFIG_WIRINGPI_
 static bcm2836_Peripheral           gpio;
+#endif
 
 /* contains instances of Motor_Struct objects; must be in same order as MotorTask_Motor_Id enumeration. */
 static volatile Motor_Struct        Motor[eMT_NUM_MOTORS] =
 {
 	                           /* Connected to DIR on BED */   /* Connected to STEP on BED */   /* intial angle */
+#ifndef _CONFIG_WIRINGPI_
 	/* eMT_MotorID_MotorA */ { .mSigDIR = BCM2836_GPIO_PIN_19,  .mSigSTEP = BCM2836_GPIO_PIN_26,  .angle = 0 },
-	/* eMT_MotorID_MotorB */ { .mSigDIR = BCM2836_GPIO_PIN_10,  .mSigSTEP = BCM2836_GPIO_PIN_9,  .angle = 0 },
+	/* eMT_MotorID_MotorB */ { .mSigDIR = BCM2836_GPIO_PIN_10,  .mSigSTEP = BCM2836_GPIO_PIN_9,   .angle = 0 },
+#else
+	/* NOTE: wiringPI and BCM28136 pin numbering is different; used shell command 'gpio readll' to determine
+	         appropriate pin numbers when using wiringPi library. Ex: BCM2836 GPIO_PIN_19 = WIRINGPI_PIN_24 */
+
+	/* eMT_MotorID_MotorA */ { .mSigDIR = 24,                   .mSigSTEP = 25,                   .angle = 0 },
+	/* eMT_MotorID_MotorB */ { .mSigDIR = 12,                   .mSigSTEP = 13,                   .angle = 0 },
+#endif
 };
 
 /* Local functions */
@@ -64,16 +82,24 @@ static void MotorTask_stepCCW( MotorTask_Motor_Id index, unsigned int steps)
 	write( STDOUT_FILENO, "     MotorTask_stepCCW\n", 24);
 
 	/* set direction to counter-clock-wise */
+#ifndef _CONFIG_WIRINGPI_
 	bcm2836_GPIOSetPinLevel( &gpio, Motor[index].mSigDIR, BCM2836_GPIO_PIN_LEVEL_LOW);
+#else
+	digitalWrite( Motor[index].mSigDIR, LOW);
+#endif
 
 	for ( i = 0; i < steps; i++)
 	{
 		/* steps occur on RISING edge - set STEP signal
 		   LOW, then immediately to HIGH
 		 */
-
+#ifndef _CONFIG_WIRINGPI_
 		bcm2836_GPIOSetPinLevel( &gpio, Motor[index].mSigSTEP, BCM2836_GPIO_PIN_LEVEL_LOW);
 		bcm2836_GPIOSetPinLevel( &gpio, Motor[index].mSigSTEP, BCM2836_GPIO_PIN_LEVEL_HIGH);
+#else
+		digitalWrite( Motor[index].mSigSTEP, LOW);
+		digitalWrite( Motor[index].mSigSTEP, HIGH);
+#endif
 
 		nanosleep( &ts_1ms, NULL);
 	}
@@ -110,7 +136,11 @@ static void MotorTask_stepCW( MotorTask_Motor_Id index, unsigned int steps)
 	write( STDOUT_FILENO, "     MotorTask_stepCW\n", 23);
 
 	/* set direction to counter-clock-wise */
+#ifndef _CONFIG_WIRINGPI_
 	bcm2836_GPIOSetPinLevel( &gpio, Motor[index].mSigDIR, BCM2836_GPIO_PIN_LEVEL_HIGH);
+#else
+	digitalWrite( Motor[index].mSigDIR, HIGH);
+#endif
 
 	for ( i = 0; i < steps; i++)
 	{
@@ -118,8 +148,13 @@ static void MotorTask_stepCW( MotorTask_Motor_Id index, unsigned int steps)
 		   LOW, then immediately to HIGH
 		 */
 
+#ifndef _CONFIG_WIRINGPI_
 		bcm2836_GPIOSetPinLevel( &gpio, Motor[index].mSigSTEP, BCM2836_GPIO_PIN_LEVEL_LOW);
 		bcm2836_GPIOSetPinLevel( &gpio, Motor[index].mSigSTEP, BCM2836_GPIO_PIN_LEVEL_HIGH);
+#else
+		digitalWrite( Motor[index].mSigSTEP, LOW);
+		digitalWrite( Motor[index].mSigSTEP, HIGH);
+#endif
 
 		nanosleep( &ts_1ms, NULL);
 	}
@@ -204,7 +239,8 @@ static void* MotorTask_GoTo_StartRoutine( void *arg)
 static void MotorTask_SmState_InitFxn( void)
 {
 	// state machine Init state function
-	
+
+#ifndef _CONFIG_WIRINGPI_	
 	int rv;
 
 	/* initialize GPIO peripheral */
@@ -213,14 +249,20 @@ static void MotorTask_SmState_InitFxn( void)
 	{
 		perror("bcm2836_initPeripheral");	
 	}
+#else
+	wiringPiSetup();
+#endif
 
 	/* Configure GPIOs controlling motors */
 	for ( int i = 0; i < eMT_NUM_MOTORS; i++)
 	{
+#ifndef _CONFIG_WIRINGPI_
 		bcm2836_GPIOPinTypeOutput( &gpio, Motor[i].mSigDIR);
-
 		bcm2836_GPIOPinTypeOutput( &gpio, Motor[i].mSigSTEP);
-		bcm2836_GPIOSetPinLevel( &gpio, Motor[i].mSigSTEP, BCM2836_GPIO_PIN_LEVEL_HIGH);
+#else
+		pinMode( Motor[i].mSigDIR, OUTPUT);
+		pinMode( Motor[i].mSigSTEP, OUTPUT);
+#endif
 	}
 
 

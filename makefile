@@ -4,7 +4,7 @@ objects = main.o \
           motortask.o
 
 app: $(objects)
-	gcc -o app $(objects) -pthread libs/bcm2836/libbcm2836.a
+	gcc -o app $(objects) -pthread libs/bcm2836/libbcm2836.a -lwiringPi
 
 main.o: main.c
 	gcc -c -std=c99 main.c

@@ -23,9 +23,9 @@
 #endif
 
 
-#define DELAY_1_MS   1000000
-#define DELAY_10_MS 10000000
+#define DELAY_1_MS  1000000
 
+#define DELAY_10_MS 100000
 /* Global (application-wide) variables */
 extern CmdProc_Motor_Cmd_Queue cmdQueue;
 
@@ -48,8 +48,8 @@ static volatile Motor_Struct        Motor[eMT_NUM_MOTORS] =
 	/* NOTE: wiringPI and BCM28136 pin numbering is different; used shell command 'gpio readll' to determine
 	         appropriate pin numbers when using wiringPi library. Ex: BCM2836 GPIO_PIN_19 = WIRINGPI_PIN_24 */
 
-	/* eMT_MotorID_MotorA */ { .mSigDIR = 24,                   .mSigSTEP = 25,                   .angle = 0 },
-	/* eMT_MotorID_MotorB */ { .mSigDIR = 12,                   .mSigSTEP = 13,                   .angle = 0 },
+	/* eMT_MotorID_MotorA */ { .mSigDIR = 24,                   .mSigSTEP = 25,                   .angle = 0,   .mSigEN = 3 },
+	/* eMT_MotorID_MotorB */ { .mSigDIR = 27,                   .mSigSTEP = 28,                   .angle = 0,   .mSigEN = 2 },
 #endif
 };
 
@@ -85,6 +85,7 @@ static void MotorTask_stepCCW( MotorTask_Motor_Id index, unsigned int steps)
 #ifndef _CONFIG_WIRINGPI_
 	bcm2836_GPIOSetPinLevel( &gpio, Motor[index].mSigDIR, BCM2836_GPIO_PIN_LEVEL_LOW);
 #else
+	digitalWrite( Motor[index].mSigEN, LOW);
 	digitalWrite( Motor[index].mSigDIR, LOW);
 #endif
 
@@ -98,11 +99,16 @@ static void MotorTask_stepCCW( MotorTask_Motor_Id index, unsigned int steps)
 		bcm2836_GPIOSetPinLevel( &gpio, Motor[index].mSigSTEP, BCM2836_GPIO_PIN_LEVEL_HIGH);
 #else
 		digitalWrite( Motor[index].mSigSTEP, LOW);
+		nanosleep( &ts_1ms, NULL);
 		digitalWrite( Motor[index].mSigSTEP, HIGH);
 #endif
 
 		nanosleep( &ts_1ms, NULL);
 	}
+
+#ifdef _CONFIG_WIRINGPI_
+	digitalWrite( Motor[index].mSigEN, HIGH);
+#endif
 
 	/* update motor angle */
 	Motor[index].angle += STEP_ANGLE;
@@ -139,6 +145,7 @@ static void MotorTask_stepCW( MotorTask_Motor_Id index, unsigned int steps)
 #ifndef _CONFIG_WIRINGPI_
 	bcm2836_GPIOSetPinLevel( &gpio, Motor[index].mSigDIR, BCM2836_GPIO_PIN_LEVEL_HIGH);
 #else
+	digitalWrite( Motor[index].mSigEN, LOW);
 	digitalWrite( Motor[index].mSigDIR, HIGH);
 #endif
 
@@ -152,12 +159,18 @@ static void MotorTask_stepCW( MotorTask_Motor_Id index, unsigned int steps)
 		bcm2836_GPIOSetPinLevel( &gpio, Motor[index].mSigSTEP, BCM2836_GPIO_PIN_LEVEL_LOW);
 		bcm2836_GPIOSetPinLevel( &gpio, Motor[index].mSigSTEP, BCM2836_GPIO_PIN_LEVEL_HIGH);
 #else
+
 		digitalWrite( Motor[index].mSigSTEP, LOW);
+		nanosleep( &ts_1ms, NULL);
 		digitalWrite( Motor[index].mSigSTEP, HIGH);
 #endif
 
 		nanosleep( &ts_1ms, NULL);
 	}
+
+#ifdef _CONFIG_WIRINGPI_
+        digitalWrite( Motor[index].mSigEN, HIGH);
+#endif
 
 	/* update motor angle */
 	Motor[index].angle -= STEP_ANGLE;
@@ -172,7 +185,7 @@ static void MotorTask_stepCW( MotorTask_Motor_Id index, unsigned int steps)
  *                    entry in Motor array)
  *
  *            steps - number of steps to rotate (sign determines direction)
- *  
+ *
  *  Return:   none
  *
  *  Notes:    1) For positive value of 'steps' argument, driver steps CCW;
@@ -264,6 +277,9 @@ static void MotorTask_SmState_InitFxn( void)
 #else
 		pinMode( Motor[i].mSigDIR, OUTPUT);
 		pinMode( Motor[i].mSigSTEP, OUTPUT);
+		pinMode( Motor[i].mSigEN, OUTPUT);
+
+		digitalWrite( Motor[i].mSigEN, HIGH);
 #endif
 	}
 
@@ -397,8 +413,8 @@ static void MotorTask_SmState_GoToFxn( void)
 	 */
 
 	/* MLAZIC_TBD: fake deltas for testing */
-	argA.delta = 45000 / STEP_ANGLE; /* rotate +45 degrees */
-	argB.delta = -45000 / STEP_ANGLE; /* rotate -45 degrees */
+	argA.delta = 15000 / STEP_ANGLE; /* rotate +45 degrees */
+	argB.delta = -15000 / STEP_ANGLE; /* rotate -45 degrees */
 	/* MLAZIC_END */
 
 	// argA.delta = (req_angle_A - current_angle_A) / DEGREES_PER_STEP

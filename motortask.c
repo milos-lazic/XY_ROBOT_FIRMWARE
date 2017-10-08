@@ -413,8 +413,8 @@ static void MotorTask_SmState_GoToFxn( void)
 	 */
 
 	/* MLAZIC_TBD: fake deltas for testing */
-	argA.delta = 15000 / STEP_ANGLE; /* rotate +45 degrees */
-	argB.delta = -15000 / STEP_ANGLE; /* rotate -45 degrees */
+	argA.delta = cmd.cmdParams.goToCmdParams.posX;/* rotate +45 degrees */
+	argB.delta = cmd.cmdParams.goToCmdParams.posY; /* rotate -45 degrees */
 	/* MLAZIC_END */
 
 	// argA.delta = (req_angle_A - current_angle_A) / DEGREES_PER_STEP

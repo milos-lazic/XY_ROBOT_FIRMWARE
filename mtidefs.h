@@ -70,6 +70,7 @@ typedef struct
 #ifdef _CONFIG_WIRINGPI_
 	int                    mSigDIR;    // DIR signal GPIO pin index (wiringPI)
 	int                    mSigSTEP;   // STEP signal GPIO pin index (wiringPI)
+	int                    mSigEN;     // EN signal GPIO pin index (wiringPI)
 #else
 	e_bcm2836_GPIO_Pin     mSigDIR;    // DIR signal GPIO pin index
 	e_bcm2836_GPIO_Pin     mSigSTEP;   // STEP signal GPIO pin index

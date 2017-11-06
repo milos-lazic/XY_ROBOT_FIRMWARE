@@ -4,11 +4,11 @@ CFLAGS = -std=c99 -Wall
 EXECUTABLE = app
 
 LIBS = -pthread \
-       -lwiringPi \
        libs/bcm2836/libbcm2836.a
 
 SRC = cmdproctask.c \
       motortask.c \
+      mtlookup.c \
       main.c
 
 OBJ = $(SRC:.c=.o)
@@ -31,6 +31,10 @@ cmdproctask.o: cmdproctask.c
 	@ $(CC) -c $(CFLAGS) $<
 
 motortask.o: motortask.c
+	@ echo [CC $<]
+	@ $(CC) -c $(CFLAGS) $<
+
+mtlookup.o : mtlookup.c
 	@ echo [CC $<]
 	@ $(CC) -c $(CFLAGS) $<
 

@@ -14,7 +14,7 @@
 #include "mtproto.h"
 #include "cpudefs.h"
 
-#define _CONFIG_WIRINGPI_
+//#define _CONFIG_WIRINGPI_
 
 #ifdef _CONFIG_WIRINGPI_
 #include <wiringPi.h>
@@ -28,6 +28,7 @@
 #define DELAY_10_MS 100000
 /* Global (application-wide) variables */
 extern CmdProc_Motor_Cmd_Queue cmdQueue;
+extern Motor_Angles table;
 
 /* Local variables */
 static MotorTask_Sm_State           state = eMT_State_INIT;
@@ -111,7 +112,7 @@ static void MotorTask_stepCCW( MotorTask_Motor_Id index, unsigned int steps)
 #endif
 
 	/* update motor angle */
-	Motor[index].angle += STEP_ANGLE;
+	Motor[index].angle += STEP_ANGLE*steps;
 }
 
 
@@ -173,7 +174,7 @@ static void MotorTask_stepCW( MotorTask_Motor_Id index, unsigned int steps)
 #endif
 
 	/* update motor angle */
-	Motor[index].angle -= STEP_ANGLE;
+	Motor[index].angle -= STEP_ANGLE*steps;
 }
 
 
@@ -404,6 +405,7 @@ static void MotorTask_SmState_GoToFxn( void)
 	// do work
 
 	MotorTask_GoTo_Thread_Arg        argA, argB;
+	Motor_Angles                    *targetAngles;
 	pthread_t                        motorA_threadHandle, motorB_threadHandle;
 
 	write( STDOUT_FILENO, "MotorTask_SmState_GoToFxn\r\n", 28);
@@ -411,16 +413,21 @@ static void MotorTask_SmState_GoToFxn( void)
 	/* lookuptable() - for given posX and posY determine
 	                   the required motor angles
 	 */
-
-	/* MLAZIC_TBD: fake deltas for testing */
-	argA.delta = cmd.cmdParams.goToCmdParams.posX;/* rotate +45 degrees */
-	argB.delta = cmd.cmdParams.goToCmdParams.posY; /* rotate -45 degrees */
-	/* MLAZIC_END */
+	targetAngles = MotorTask_LookupFxn( cmd.cmdParams.goToCmdParams.posX,
+	                                    cmd.cmdParams.goToCmdParams.posY);
+	/* IF inverse kinematics unsuccessful */
+	if ( targetAngles == NULL)
+	{
+		state = eMT_State_IDLE;
+		return;
+	}
 
 	// argA.delta = (req_angle_A - current_angle_A) / DEGREES_PER_STEP
+	argA.delta = (targetAngles->theta1 - Motor[eMT_MotorID_MotorA].angle) / STEP_ANGLE;
 	argA.mID   = eMT_MotorID_MotorA;
 
 	// argB.delta = (req_angle_B - current_andle_B) / DEGREES_PER_STEP
+	argB.delta = (targetAngles->theta3 - Motor[eMT_MotorID_MotorB].angle) / STEP_ANGLE;
 	argB.mID   = eMT_MotorID_MotorB;
 
 	/* create sub-thread A */

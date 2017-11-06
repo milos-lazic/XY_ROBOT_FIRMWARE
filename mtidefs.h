@@ -4,7 +4,7 @@
 #ifndef _MT_IDEFS_H_
 #define _MT_IDEFS_H_
 
-#define _CONFIG_WIRINGPI_
+//#define _CONFIG_WIRINGPI_
 
 #ifdef _CONFIG_WIRINGPI_
 #include <wiringPi.h>
@@ -102,5 +102,13 @@ typedef struct
 	MotorTask_Motor_Id     mID;
 	int                    delta;
 } MotorTask_GoTo_Thread_Arg;
+
+
+
+typedef struct
+{
+	int                    theta1; // motor A angle
+	int                    theta3; // motor B angle
+} Motor_Angles;
 
 #endif

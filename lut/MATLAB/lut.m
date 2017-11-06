@@ -13,17 +13,17 @@ R_AW = transpose([1 0; 0 -1]);
 % Position vector; origin axis A to origin axis W; with respect to axis A
 P_AW = transpose([-89.7 427.90]);
 
+% Position vector; origin axis A to point P; with respect to axis A
 P_AP = P_AW + R_AW*[139;107];
 
-[th1 th2] = invkinfxn( P_AP);
-
-fileID = fopen('table.txt', 'w');
-
-fprintf(fileID, 'struct pos table[][] =\r\n');
-fprintf(fileID, '{\r\n');
 
 X_LIMIT = 279;
 Y_LIMIT = 215;
+
+fileID = fopen('table.txt', 'w');
+
+fprintf(fileID, 'struct pos table[%.0f][%.0f] =\r\n', X_LIMIT+1, Y_LIMIT+1);
+fprintf(fileID, '{\r\n');
 
 for x=0:1:X_LIMIT
     

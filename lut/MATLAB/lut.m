@@ -25,11 +25,11 @@ fprintf(fileID, '{\r\n');
 X_LIMIT = 279;
 Y_LIMIT = 215;
 
-for x=0:1:10
+for x=0:1:X_LIMIT
     
     fprintf( fileID, '     { ');
     
-    for y=0:1:10
+    for y=0:1:Y_LIMIT
         
         P_AP = P_AW + R_AW*[x;y];
         
@@ -38,7 +38,7 @@ for x=0:1:10
         
         fprintf(fileID, '{%.0f, %.0f}', 1000*th1, 1000*th3);
         
-        if y < 10
+        if y < Y_LIMIT
             fprintf(fileID, ', ');
         else
             fprintf(fileID, ' ');

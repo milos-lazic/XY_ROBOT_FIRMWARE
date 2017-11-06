@@ -14,7 +14,7 @@
 #include "mtproto.h"
 #include "cpudefs.h"
 
-//#define _CONFIG_WIRINGPI_
+#define _CONFIG_WIRINGPI_
 
 #ifdef _CONFIG_WIRINGPI_
 #include <wiringPi.h>

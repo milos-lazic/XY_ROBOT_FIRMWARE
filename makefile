@@ -4,6 +4,7 @@ CFLAGS = -std=c99 -Wall
 EXECUTABLE = app
 
 LIBS = -pthread \
+       -lwiringPi \
        libs/bcm2836/libbcm2836.a
 
 SRC = cmdproctask.c \

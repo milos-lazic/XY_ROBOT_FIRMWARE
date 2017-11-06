@@ -4,7 +4,7 @@
 #ifndef _MT_IDEFS_H_
 #define _MT_IDEFS_H_
 
-//#define _CONFIG_WIRINGPI_
+#define _CONFIG_WIRINGPI_
 
 #ifdef _CONFIG_WIRINGPI_
 #include <wiringPi.h>

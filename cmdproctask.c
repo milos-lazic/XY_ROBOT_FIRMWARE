@@ -127,7 +127,10 @@ static int CmdProc_parseMtrCmd( const char *cmdStr)
 
 
 	/* place command on Motor command queue */
-	CmdProc_Cmd_Queue_Put( &cmdQueue, &cmd);
+	if ( CmdProc_Cmd_Queue_Put( &cmdQueue, &cmd) == -1)
+	{
+		return -1;
+	}
 
 	/* return success */
 	return 0;

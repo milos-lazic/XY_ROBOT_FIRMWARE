@@ -25,7 +25,7 @@
 
 #define DELAY_1_MS  1000000
 
-#define DELAY_10_MS 100000
+#define DELAY_10_MS 10000000
 /* Global (application-wide) variables */
 extern CmdProc_Motor_Cmd_Queue cmdQueue;
 extern Motor_Angles table;
@@ -33,6 +33,8 @@ extern Motor_Angles table;
 /* Local variables */
 static MotorTask_Sm_State           state = eMT_State_INIT;
 static CmdProc_Motor_Cmd_Struct     cmd; // most recent command
+unsigned int count = 0;
+
 
 #ifndef _CONFIG_WIRINGPI_
 static bcm2836_Peripheral           gpio;
@@ -49,8 +51,8 @@ static volatile Motor_Struct        Motor[eMT_NUM_MOTORS] =
 	/* NOTE: wiringPI and BCM28136 pin numbering is different; used shell command 'gpio readll' to determine
 	         appropriate pin numbers when using wiringPi library. Ex: BCM2836 GPIO_PIN_19 = WIRINGPI_PIN_24 */
 
-	/* eMT_MotorID_MotorA */ { .mSigDIR = 24,                   .mSigSTEP = 25,                   .angle = 0,   .mSigEN = 3 },
-	/* eMT_MotorID_MotorB */ { .mSigDIR = 27,                   .mSigSTEP = 28,                   .angle = 0,   .mSigEN = 2 },
+	/* eMT_MotorID_MotorA */ { .mSigDIR = 24,                   .mSigSTEP = 25,                   .angle = 124647,   .mSigEN = 3 },
+	/* eMT_MotorID_MotorB */ { .mSigDIR = 27,                   .mSigSTEP = 28,                   .angle = 92646,   .mSigEN = 2 },
 #endif
 };
 
@@ -318,6 +320,8 @@ static void MotorTask_SmState_IdleFxn( void)
 	}
 	else
 	{
+		count++;
+		printf("count = %d\n", count);
 		switch( cmd.cmd)
 		{
 

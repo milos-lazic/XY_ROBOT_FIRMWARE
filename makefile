@@ -10,6 +10,7 @@ LIBS = -pthread \
 SRC = cmdproctask.c \
       motortask.c \
       mtlookup.c \
+      mtservo.c \
       main.c
 
 OBJ = $(SRC:.c=.o)
@@ -38,6 +39,11 @@ motortask.o: motortask.c
 mtlookup.o : mtlookup.c
 	@ echo [CC $<]
 	@ $(CC) -c $(CFLAGS) $<
+
+mtservo.o : mtservo.c
+	@ echo [CC $<]
+	@ $(CC) -c $(CFLAGS) $<
+
 
 .PHONY: clean
 clean:

@@ -20,10 +20,20 @@
 #define ALL_LED_OFF_H_REG_ADR       0xFD
 #define PRE_SCALE_REG_ADR           0xFE
 
+#define __RESTART                   0x80
+#define __SLEEP                     0x10
+
+#define __ALLCALL                   0x01
+#define __INVRT                     0x10
+#define __OUTDRV                    0x04
+
+
 extern void mtservo_init( int fd);
 
 extern void mtservo_setPwmFreq( int fd, unsigned int  pwm_freq);
 
-extern void mtservo_setDuty( int fd, int channel, on, off);
+extern void mtservo_setDuty( int fd, int channel, int on, int off);
+
+extern void mtservo_resetAllPWM( int fd, int on, int off);
 
 #endif

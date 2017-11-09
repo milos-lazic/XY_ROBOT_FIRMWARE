@@ -12,7 +12,7 @@ void mtservo_resetAllPWM( int fd, int on, int off)
 }
 
 
-void mtservo_setPwmFreq( int fd, unsigned int pwm_freq);
+void mtservo_setPwmFreq( int fd, unsigned int pwm_freq)
 {
 	unsigned int prescaleval = 25000000;
         int oldmode, newmode;

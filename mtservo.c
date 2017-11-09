@@ -18,7 +18,7 @@ void mtservo_setPwmFreq( int fd, unsigned int pwm_freq);
         int oldmode, newmode;
 
         prescaleval /= 4096;
-        prescaleval /= freq_hz;
+        prescaleval /= pwm_freq;
         prescaleval -= 1;
 
         oldmode = wiringPiI2CReadReg8( fd, MODE1_REG_ADR);

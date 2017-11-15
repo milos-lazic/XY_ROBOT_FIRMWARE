@@ -1,4 +1,4 @@
-function [th1, th3] = invkinfxn(P)
+function [th1, th3, th2_, th4] = invkinfxn(P)
 
     px = P(1);
     py = P(2);
@@ -12,7 +12,7 @@ function [th1, th3] = invkinfxn(P)
     L6 = 100; % mm
     L7 = 249.4338; % mm
     alpha = (180 - 117.31) * pi / 180; % degrees to radians
-    beta = tan( (54*sind(62.69)) / (220 + 54*cosd(62.69))); % degrees to radians
+    beta = tan( (L5*sin(alpha)) / (220 + L5*cos(alpha))); % radians
     
     % determine theta 1 and use first solution
     c = (L7^2 - px^2 - py^2 - L1^2) / (-2*L1);
@@ -38,7 +38,10 @@ function [th1, th3] = invkinfxn(P)
     th3 = atan2(b,a) - atan2( sqrt(a^2 + b^2 - c^2), c);
     
     
-    th1 = rad2deg(th1);
-    th3 = rad2deg(th3);
+    th1 = th1 * 180 / pi;
+    th3 = th3 * 180 / pi;
+    th2_ = th2_ * 180 / pi;
+    
+    th4 = acosd( (qx - L6 - L3*cosd(th3)) / L4 );
     
 end

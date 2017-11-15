@@ -18,7 +18,7 @@ P_AP = P_AW + R_AW*[139;107];
 
 
 X_LIMIT = 279;
-Y_LIMIT = 215;
+Y_LIMIT = 216;
 
 fileID = fopen('table.txt', 'w');
 

@@ -270,6 +270,8 @@ static void MotorTask_SmState_InitFxn( void)
 	}
 #else
 	wiringPiSetup();
+
+	/* MLAZIC_TBD: WiringPi set up the I2C driver, wiringPiI2CSetup() */
 #endif
 
 	/* Configure GPIOs controlling motors */
@@ -287,6 +289,11 @@ static void MotorTask_SmState_InitFxn( void)
 #endif
 	}
 
+#ifndef _CONFIG_WIRINGPI_
+
+#else
+	/* MLAZIC_TBD: call mtservo_init() and mtservo routines needed to set up servo driver board */
+#endif
 
 	state = eMT_State_IDLE;
 }

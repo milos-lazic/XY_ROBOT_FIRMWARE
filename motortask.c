@@ -12,6 +12,7 @@
 #include "mtidefs.h"
 #include "mtudefs.h"
 #include "mtproto.h"
+#include "mtservo.h"
 #include "cpudefs.h"
 
 #define _CONFIG_WIRINGPI_
@@ -23,8 +24,8 @@
 #endif
 
 
-#define DELAY_1_MS  1000000
-
+//#define DELAY_1_MS  1000000
+#define DELAY_1_MS  2500000
 #define DELAY_10_MS 10000000
 /* Global (application-wide) variables */
 extern CmdProc_Motor_Cmd_Queue cmdQueue;

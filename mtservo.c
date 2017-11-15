@@ -47,7 +47,7 @@ void mtservo_init( int fd)
 	int mode1;
 
 	// zero all PWM ports
-	mtservo_resetAllPwm( fd, 0, 0);
+	mtservo_resetAllPWM( fd, 0, 0);
 
 	wiringPiI2CWriteReg8( fd, MODE2_REG_ADR, __OUTDRV);
 	wiringPiI2CWriteReg8( fd, MODE1_REG_ADR, __ALLCALL);

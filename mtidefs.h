@@ -12,7 +12,7 @@
 #include "libs/bcm2836/bcm2836.h"
 #endif
 
-#define STEP_ANGLE    212   /* milli-degrees per step */
+#define STEP_ANGLE    (212/2)   /* milli-degrees per step */
 
 /*
  *  ======== MotorTask_Sm_State ========

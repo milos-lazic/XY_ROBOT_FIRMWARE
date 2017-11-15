@@ -5,8 +5,8 @@
 
 //#define X_LIMIT  280
 //#define Y_LIMIT  216
-#define X_LIMIT 80
-#define Y_LIMIT 80
+#define X_LIMIT 81
+#define Y_LIMIT 81
 
 
 Motor_Angles table[X_LIMIT][Y_LIMIT] =

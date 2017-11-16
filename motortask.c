@@ -89,7 +89,7 @@ static void MotorTask_stepCCW( MotorTask_Motor_Id index, unsigned int steps)
 #ifndef _CONFIG_WIRINGPI_
 	bcm2836_GPIOSetPinLevel( &gpio, Motor[index].mSigDIR, BCM2836_GPIO_PIN_LEVEL_LOW);
 #else
-	//digitalWrite( Motor[index].mSigEN, LOW);
+	digitalWrite( Motor[index].mSigEN, LOW);
 	digitalWrite( Motor[index].mSigDIR, LOW);
 #endif
 
@@ -111,7 +111,7 @@ static void MotorTask_stepCCW( MotorTask_Motor_Id index, unsigned int steps)
 	}
 
 #ifdef _CONFIG_WIRINGPI_
-	//digitalWrite( Motor[index].mSigEN, HIGH);
+	digitalWrite( Motor[index].mSigEN, HIGH);
 #endif
 
 	/* update motor angle */
@@ -149,7 +149,7 @@ static void MotorTask_stepCW( MotorTask_Motor_Id index, unsigned int steps)
 #ifndef _CONFIG_WIRINGPI_
 	bcm2836_GPIOSetPinLevel( &gpio, Motor[index].mSigDIR, BCM2836_GPIO_PIN_LEVEL_HIGH);
 #else
-	//digitalWrite( Motor[index].mSigEN, LOW);
+	digitalWrite( Motor[index].mSigEN, LOW);
 	digitalWrite( Motor[index].mSigDIR, HIGH);
 #endif
 
@@ -173,7 +173,7 @@ static void MotorTask_stepCW( MotorTask_Motor_Id index, unsigned int steps)
 	}
 
 #ifdef _CONFIG_WIRINGPI_
-        //digitalWrite( Motor[index].mSigEN, HIGH);
+        digitalWrite( Motor[index].mSigEN, HIGH);
 #endif
 
 	/* update motor angle */
@@ -285,8 +285,7 @@ static void MotorTask_SmState_InitFxn( void)
 		pinMode( Motor[i].mSigSTEP, OUTPUT);
 		pinMode( Motor[i].mSigEN, OUTPUT);
 
-		//digitalWrite( Motor[i].mSigEN, HIGH);
-		digitalWrite( Motor[i].mSigEN, LOW);
+		digitalWrite( Motor[i].mSigEN, HIGH);
 #endif
 	}
 

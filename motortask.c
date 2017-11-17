@@ -17,11 +17,10 @@
 
 #define _CONFIG_WIRINGPI_
 
-#ifdef _CONFIG_WIRINGPI_
+
 #include <wiringPi.h>
-#else
-#include "libs/bcm2836/bcm2836.h"
-#endif
+#include <wiringPiI2C.h>
+
 
 
 //#define DELAY_1_MS  1000000
@@ -240,6 +239,12 @@ static void MotorTask_SmState_InitFxn( void)
 
 	/* MLAZIC_TBD: WiringPi set up the I2C driver, wiringPiI2CSetup() */
 	i2cfd = wiringPiI2CSetup( 0x40);
+	if ( i2cfd == -1)
+	{
+		write( STDOUT_FILENO, "Error: wiringPiI2CSetup\r\n", 26);
+		/* kill thread */
+		pthread_exit();
+	}
 
 	/* Configure GPIOs controlling motors */
 	for ( int i = 0; i < eMT_NUM_MOTORS; i++)

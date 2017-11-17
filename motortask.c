@@ -45,16 +45,11 @@ static bcm2836_Peripheral           gpio;
 static volatile Motor_Struct        Motor[eMT_NUM_MOTORS] =
 {
 	                           /* Connected to DIR on BED */   /* Connected to STEP on BED */   /* intial angle */
-#ifndef _CONFIG_WIRINGPI_
-	/* eMT_MotorID_MotorA */ { .mSigDIR = BCM2836_GPIO_PIN_19,  .mSigSTEP = BCM2836_GPIO_PIN_26,  .angle = 0 },
-	/* eMT_MotorID_MotorB */ { .mSigDIR = BCM2836_GPIO_PIN_10,  .mSigSTEP = BCM2836_GPIO_PIN_9,   .angle = 0 },
-#else
 	/* NOTE: wiringPI and BCM28136 pin numbering is different; used shell command 'gpio readll' to determine
 	         appropriate pin numbers when using wiringPi library. Ex: BCM2836 GPIO_PIN_19 = WIRINGPI_PIN_24 */
 
 	/* eMT_MotorID_MotorA */ { .mSigDIR = 24,                   .mSigSTEP = 25,                   .angle = 124647,   .mSigEN = 3 },
 	/* eMT_MotorID_MotorB */ { .mSigDIR = 27,                   .mSigSTEP = 28,                   .angle = 92646,   .mSigEN = 2 },
-#endif
 };
 
 /* Local functions */
@@ -86,27 +81,17 @@ static void MotorTask_stepCCW( MotorTask_Motor_Id index, unsigned int steps)
 	write( STDOUT_FILENO, "     MotorTask_stepCCW\n", 24);
 
 	/* set direction to counter-clock-wise */
-#ifndef _CONFIG_WIRINGPI_
-	bcm2836_GPIOSetPinLevel( &gpio, Motor[index].mSigDIR, BCM2836_GPIO_PIN_LEVEL_LOW);
-#else
 	//digitalWrite( Motor[index].mSigEN, LOW);
 	digitalWrite( Motor[index].mSigDIR, LOW);
-#endif
 
 	for ( i = 0; i < steps; i++)
 	{
 		/* steps occur on RISING edge - set STEP signal
 		   LOW, then immediately to HIGH
 		 */
-#ifndef _CONFIG_WIRINGPI_
-		bcm2836_GPIOSetPinLevel( &gpio, Motor[index].mSigSTEP, BCM2836_GPIO_PIN_LEVEL_LOW);
-		bcm2836_GPIOSetPinLevel( &gpio, Motor[index].mSigSTEP, BCM2836_GPIO_PIN_LEVEL_HIGH);
-#else
 		digitalWrite( Motor[index].mSigSTEP, LOW);
 		nanosleep( &ts_1ms, NULL);
 		digitalWrite( Motor[index].mSigSTEP, HIGH);
-#endif
-
 		nanosleep( &ts_1ms, NULL);
 	}
 
@@ -146,12 +131,8 @@ static void MotorTask_stepCW( MotorTask_Motor_Id index, unsigned int steps)
 	write( STDOUT_FILENO, "     MotorTask_stepCW\n", 23);
 
 	/* set direction to counter-clock-wise */
-#ifndef _CONFIG_WIRINGPI_
-	bcm2836_GPIOSetPinLevel( &gpio, Motor[index].mSigDIR, BCM2836_GPIO_PIN_LEVEL_HIGH);
-#else
 	//digitalWrite( Motor[index].mSigEN, LOW);
 	digitalWrite( Motor[index].mSigDIR, HIGH);
-#endif
 
 	for ( i = 0; i < steps; i++)
 	{
@@ -159,15 +140,9 @@ static void MotorTask_stepCW( MotorTask_Motor_Id index, unsigned int steps)
 		   LOW, then immediately to HIGH
 		 */
 
-#ifndef _CONFIG_WIRINGPI_
-		bcm2836_GPIOSetPinLevel( &gpio, Motor[index].mSigSTEP, BCM2836_GPIO_PIN_LEVEL_LOW);
-		bcm2836_GPIOSetPinLevel( &gpio, Motor[index].mSigSTEP, BCM2836_GPIO_PIN_LEVEL_HIGH);
-#else
-
 		digitalWrite( Motor[index].mSigSTEP, LOW);
 		nanosleep( &ts_1ms, NULL);
 		digitalWrite( Motor[index].mSigSTEP, HIGH);
-#endif
 
 		nanosleep( &ts_1ms, NULL);
 	}

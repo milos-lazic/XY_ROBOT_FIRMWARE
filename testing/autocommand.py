@@ -41,6 +41,24 @@ for x in range(50, 0, -1):
         print "received:", data
 
 
+for x in xrange(0, 50):
+        time.sleep(0.0005)
+        buf = "AT!MTR_CMD=GOTO,%d,0" % x
+        print "sent:", buf, "\n"
+        s.send(buf)
+        data = s.recv(BUFFER_SIZE)
+        print "received:", data
+
+
+for x in range(50, 0, -1):
+        time.sleep(0.0005)
+        buf = "AT!MTR_CMD=GOTO,%d,0" % x
+        print "sent:", buf, "\n"
+        s.send(buf)
+        data = s.recv(BUFFER_SIZE)
+        print "received:", data
+
+
 
 #for x in xrange(0, 50):
 #        time.sleep(0.0005)

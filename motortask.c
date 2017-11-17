@@ -456,7 +456,7 @@ static void MotorTask_SmState_ServoFxn( void)
 			break;
 
 		case 1: // lower pen
-			mtservo_setDuty( i2cfd, 0x00, 200, 370);
+			mtservo_setDuty( i2cfd, 0x00, 200, 380);
 			break;
 
 		default:

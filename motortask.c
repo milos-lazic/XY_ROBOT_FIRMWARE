@@ -25,7 +25,7 @@
 
 
 //#define DELAY_1_MS  1000000
-#define DELAY_1_MS  1000
+#define DELAY_1_MS  20000
 #define DELAY_10_MS 10000000
 /* Global (application-wide) variables */
 extern CmdProc_Motor_Cmd_Queue cmdQueue;
@@ -89,7 +89,7 @@ static void MotorTask_stepCCW( MotorTask_Motor_Id index, unsigned int steps)
 #ifndef _CONFIG_WIRINGPI_
 	bcm2836_GPIOSetPinLevel( &gpio, Motor[index].mSigDIR, BCM2836_GPIO_PIN_LEVEL_LOW);
 #else
-	digitalWrite( Motor[index].mSigEN, LOW);
+	//digitalWrite( Motor[index].mSigEN, LOW);
 	digitalWrite( Motor[index].mSigDIR, LOW);
 #endif
 
@@ -111,7 +111,7 @@ static void MotorTask_stepCCW( MotorTask_Motor_Id index, unsigned int steps)
 	}
 
 #ifdef _CONFIG_WIRINGPI_
-	digitalWrite( Motor[index].mSigEN, HIGH);
+	//digitalWrite( Motor[index].mSigEN, HIGH);
 #endif
 
 	/* update motor angle */
@@ -149,7 +149,7 @@ static void MotorTask_stepCW( MotorTask_Motor_Id index, unsigned int steps)
 #ifndef _CONFIG_WIRINGPI_
 	bcm2836_GPIOSetPinLevel( &gpio, Motor[index].mSigDIR, BCM2836_GPIO_PIN_LEVEL_HIGH);
 #else
-	digitalWrite( Motor[index].mSigEN, LOW);
+	//digitalWrite( Motor[index].mSigEN, LOW);
 	digitalWrite( Motor[index].mSigDIR, HIGH);
 #endif
 
@@ -173,7 +173,7 @@ static void MotorTask_stepCW( MotorTask_Motor_Id index, unsigned int steps)
 	}
 
 #ifdef _CONFIG_WIRINGPI_
-        digitalWrite( Motor[index].mSigEN, HIGH);
+        //digitalWrite( Motor[index].mSigEN, HIGH);
 #endif
 
 	/* update motor angle */
@@ -285,7 +285,7 @@ static void MotorTask_SmState_InitFxn( void)
 		pinMode( Motor[i].mSigSTEP, OUTPUT);
 		pinMode( Motor[i].mSigEN, OUTPUT);
 
-		digitalWrite( Motor[i].mSigEN, HIGH);
+		digitalWrite( Motor[i].mSigEN, HIGH); // disable power stage 
 #endif
 	}
 
@@ -322,7 +322,8 @@ static void MotorTask_SmState_IdleFxn( void)
 	if ( s == -1)
 	{
 		/* Failed to retrieve command */
-
+		digitalWrite( Motor[0].mSigEN, HIGH); // disiable BED power stages
+		digitalWrite( Motor[1].mSigEN, HIGH);
 		/* Loop back to same state */
 		state = eMT_State_IDLE;
 	}
@@ -339,6 +340,8 @@ static void MotorTask_SmState_IdleFxn( void)
 
 		case eCmd_Motor_Cmd_GOTO:
 			state = eMT_State_GOTO;
+			digitalWrite( Motor[0].mSigEN, LOW); // enable BED power stages
+			digitalWrite( Motor[1].mSigEN, LOW);
 			break;
 
 		default:

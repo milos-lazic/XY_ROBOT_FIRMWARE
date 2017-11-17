@@ -498,7 +498,7 @@ static void MotorTask_Sm_Run( void)
 		break;
 
 	case eMT_State_SERVO:
-		//MotorTask_SmState_ServoFxn();
+		MotorTask_SmState_ServoFxn();
 		break;
 
 	default:

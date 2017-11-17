@@ -48,8 +48,8 @@ static volatile Motor_Struct        Motor[eMT_NUM_MOTORS] =
 	/* NOTE: wiringPI and BCM28136 pin numbering is different; used shell command 'gpio readll' to determine
 	         appropriate pin numbers when using wiringPi library. Ex: BCM2836 GPIO_PIN_19 = WIRINGPI_PIN_24 */
 
-	/* eMT_MotorID_MotorA */ { .mSigDIR = 24,                   .mSigSTEP = 28,                   .angle = 124647,   .mSigEN = 3 },
-	/* eMT_MotorID_MotorB */ { .mSigDIR = 27,                   .mSigSTEP = 29,                   .angle = 92646,    .mSigEN = 2 },
+	/* eMT_MotorID_MotorA */ { .mSigDIR = 24,                   .mSigSTEP = 28,                   .angle = 131444,   .mSigEN = 3 },
+	/* eMT_MotorID_MotorB */ { .mSigDIR = 27,                   .mSigSTEP = 29,                   .angle = 87407,    .mSigEN = 2 },
 };
 
 /* Local functions */

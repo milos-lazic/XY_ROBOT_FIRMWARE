@@ -243,7 +243,7 @@ static void MotorTask_SmState_InitFxn( void)
 	{
 		write( STDOUT_FILENO, "Error: wiringPiI2CSetup\r\n", 26);
 		/* kill thread */
-		pthread_exit();
+		pthread_exit( NULL);
 	}
 
 	/* Configure GPIOs controlling motors */

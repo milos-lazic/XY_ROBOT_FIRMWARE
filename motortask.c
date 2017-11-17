@@ -238,13 +238,13 @@ static void MotorTask_SmState_InitFxn( void)
 	wiringPiSetup();
 
 	/* MLAZIC_TBD: WiringPi set up the I2C driver, wiringPiI2CSetup() */
-	i2cfd = wiringPiI2CSetup( 0x40);
-	if ( i2cfd == -1)
-	{
-		write( STDOUT_FILENO, "Error: wiringPiI2CSetup\r\n", 26);
-		/* kill thread */
-		pthread_exit( NULL);
-	}
+	// i2cfd = wiringPiI2CSetup( 0x40);
+	// if ( i2cfd == -1)
+	// {
+	// 	write( STDOUT_FILENO, "Error: wiringPiI2CSetup\r\n", 26);
+	// 	/* kill thread */
+	// 	pthread_exit( NULL);
+	// }
 
 	/* Configure GPIOs controlling motors */
 	for ( int i = 0; i < eMT_NUM_MOTORS; i++)
@@ -259,8 +259,8 @@ static void MotorTask_SmState_InitFxn( void)
 
 
 	/* MLAZIC_TBD: call mtservo_init() and mtservo routines needed to set up servo driver board */
-	mtservo_init( i2cfd);
-	mtservo_setPwmFreq( i2cfd, 50);
+	// mtservo_init( i2cfd);
+	// mtservo_setPwmFreq( i2cfd, 50);
 
 	state = eMT_State_IDLE;
 }
@@ -498,7 +498,7 @@ static void MotorTask_Sm_Run( void)
 		break;
 
 	case eMT_State_SERVO:
-		MotorTask_SmState_ServoFxn();
+		//MotorTask_SmState_ServoFxn();
 		break;
 
 	default:

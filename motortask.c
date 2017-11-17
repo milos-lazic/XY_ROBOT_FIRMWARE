@@ -452,7 +452,7 @@ static void MotorTask_SmState_ServoFxn( void)
 	switch( cmd.cmdParams.servoCmdParams.pos)
 	{
 		case 0: // raise pen
-			mtservo_setDuty( i2cfd, 0x00, 200, 420);
+			mtservo_setDuty( i2cfd, 0x00, 200, 400);
 			break;
 
 		case 1: // lower pen

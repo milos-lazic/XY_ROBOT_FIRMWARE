@@ -311,6 +311,10 @@ static void MotorTask_SmState_IdleFxn( void)
 			digitalWrite( Motor[1].mSigEN, LOW);
 			break;
 
+		case eCmd_Motor_Cmd_SERVO:
+			state = eMT_State_SERVO;
+			break;
+
 		default:
 			/* invalid command */
 			break;

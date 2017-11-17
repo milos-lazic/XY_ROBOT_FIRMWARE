@@ -76,6 +76,8 @@ static int CmProc_getCmdStr( int handle, char *buffer, size_t size)
  *               	AT!MTR_CMD=STEP,<MOTORID>,<STEP_COUNT>,<NULL>
  *
  *               	AT!MTR_CMD=GOTO,<MOTORID>,<ANGLE>,<NULL>
+ *
+ *                  AT!MTR_CMD=SERVO,<POSITION>
  */
 static int CmdProc_parseMtrCmd( const char *cmdStr)
 {
@@ -118,6 +120,13 @@ static int CmdProc_parseMtrCmd( const char *cmdStr)
 		cmd.cmdParams.goToCmdParams.posX = atoi(param0);
 
 		cmd.cmdParams.goToCmdParams.posY = atoi(param1);
+	}
+	/* ELIF SERVO (raise or lower) command */
+	else if ( strcmp( cmdID, "SERVO") == 0)
+	{
+		cmd.cmd = eCmd_Motor_Cmd_SERVO;
+
+		cmd.cmdParams.servoCmdParams.pos = atoi(param0);
 	}
 	else
 	{

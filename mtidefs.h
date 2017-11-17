@@ -28,6 +28,7 @@ typedef enum
 	eMT_State_IDLE,
 	eMT_State_STEP,
 	eMT_State_GOTO,
+	eMT_State_SERVO,
 
 	eMT_NUM_STATES
 } MotorTask_Sm_State;

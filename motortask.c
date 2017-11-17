@@ -17,15 +17,15 @@
 
 #define _CONFIG_WIRINGPI_
 
-#ifdef _CONFIG_WIRINGPI_
+
 #include <wiringPi.h>
-#else
-#include "libs/bcm2836/bcm2836.h"
-#endif
+#include <wiringPiI2C.h>
+
 
 
 //#define DELAY_1_MS  1000000
-#define DELAY_1_MS  1000000
+//#define DELAY_1_MS  120000
+#define DELAY_1_MS  15000
 #define DELAY_10_MS 10000000
 /* Global (application-wide) variables */
 extern CmdProc_Motor_Cmd_Queue cmdQueue;
@@ -34,6 +34,7 @@ extern Motor_Angles table;
 /* Local variables */
 static MotorTask_Sm_State           state = eMT_State_INIT;
 static CmdProc_Motor_Cmd_Struct     cmd; // most recent command
+static int                          i2cfd; // i2c handle (used by servo driver methods)
 unsigned int count = 0;
 
 
@@ -48,8 +49,8 @@ static volatile Motor_Struct        Motor[eMT_NUM_MOTORS] =
 	/* NOTE: wiringPI and BCM28136 pin numbering is different; used shell command 'gpio readll' to determine
 	         appropriate pin numbers when using wiringPi library. Ex: BCM2836 GPIO_PIN_19 = WIRINGPI_PIN_24 */
 
-	/* eMT_MotorID_MotorA */ { .mSigDIR = 24,                   .mSigSTEP = 25,                   .angle = 124647,   .mSigEN = 3 },
-	/* eMT_MotorID_MotorB */ { .mSigDIR = 27,                   .mSigSTEP = 28,                   .angle = 92646,   .mSigEN = 2 },
+	/* eMT_MotorID_MotorA */ { .mSigDIR = 24,                   .mSigSTEP = 28,                   .angle = 131444,   .mSigEN = 3 },
+	/* eMT_MotorID_MotorB */ { .mSigDIR = 27,                   .mSigSTEP = 29,                   .angle = 87407,    .mSigEN = 2 },
 };
 
 /* Local functions */
@@ -234,41 +235,33 @@ static void MotorTask_SmState_InitFxn( void)
 {
 	// state machine Init state function
 
-#ifndef _CONFIG_WIRINGPI_	
-	int rv;
 
-	/* initialize GPIO peripheral */
-	rv = bcm2836_initPeripheral( &gpio, BCM2836_GPIO_PERIPH_BYTE_LEN, BCM2836_GPIO_PERIPH_BASE_ADR);
-	if ( rv == - 1)
-	{
-		perror("bcm2836_initPeripheral");	
-	}
-#else
 	wiringPiSetup();
 
 	/* MLAZIC_TBD: WiringPi set up the I2C driver, wiringPiI2CSetup() */
-#endif
+	i2cfd = wiringPiI2CSetup( 0x40);
+	if ( i2cfd == -1)
+	{
+		write( STDOUT_FILENO, "Error: wiringPiI2CSetup\r\n", 26);
+		/* kill thread */
+		pthread_exit( NULL);
+	}
 
 	/* Configure GPIOs controlling motors */
 	for ( int i = 0; i < eMT_NUM_MOTORS; i++)
 	{
-#ifndef _CONFIG_WIRINGPI_
-		bcm2836_GPIOPinTypeOutput( &gpio, Motor[i].mSigDIR);
-		bcm2836_GPIOPinTypeOutput( &gpio, Motor[i].mSigSTEP);
-#else
+
 		pinMode( Motor[i].mSigDIR, OUTPUT);
 		pinMode( Motor[i].mSigSTEP, OUTPUT);
 		pinMode( Motor[i].mSigEN, OUTPUT);
 
 		digitalWrite( Motor[i].mSigEN, HIGH); // disable power stage 
-#endif
 	}
 
-#ifndef _CONFIG_WIRINGPI_
 
-#else
 	/* MLAZIC_TBD: call mtservo_init() and mtservo routines needed to set up servo driver board */
-#endif
+	mtservo_init( i2cfd);
+	mtservo_setPwmFreq( i2cfd, 50);
 
 	state = eMT_State_IDLE;
 }
@@ -319,6 +312,10 @@ static void MotorTask_SmState_IdleFxn( void)
 			digitalWrite( Motor[1].mSigEN, LOW);
 			break;
 
+		case eCmd_Motor_Cmd_SERVO:
+			state = eMT_State_SERVO;
+			break;
+
 		default:
 			/* invalid command */
 			break;
@@ -358,11 +355,15 @@ static void MotorTask_SmState_StepFxn( void)
 	{
 
 	case eCmd_Motor_Id_MOTORA:
+		digitalWrite( Motor[0].mSigEN, LOW);
 		MotorTask_step( eMT_MotorID_MotorA, cmd.cmdParams.stepCmdParams.steps);
+		digitalWrite( Motor[0].mSigEN, HIGH);
 		break;
 
 	case eCmd_Motor_Id_MOTORB:
+		digitalWrite( Motor[1].mSigEN, LOW);
 		MotorTask_step( eMT_MotorID_MotorB, cmd.cmdParams.stepCmdParams.steps);
+		digitalWrite( Motor[1].mSigEN, HIGH);
 		break;
 
 	default:
@@ -420,6 +421,7 @@ static void MotorTask_SmState_GoToFxn( void)
 	argB.delta = (targetAngles->theta3 - Motor[eMT_MotorID_MotorB].angle) / STEP_ANGLE;
 	argB.mID   = eMT_MotorID_MotorB;
 
+#if 1 // use multithreading
 	/* create sub-thread A */
 	pthread_create( &motorA_threadHandle, NULL, MotorTask_GoTo_StartRoutine, &argA);
 
@@ -429,10 +431,43 @@ static void MotorTask_SmState_GoToFxn( void)
 
 	pthread_join( motorA_threadHandle, NULL);
 	pthread_join( motorB_threadHandle, NULL);
+#else // sequential call to stepping functions
+	MotorTask_step( argA.mID, argA.delta);
+	MotorTask_step( argB.mID, argB.delta);
+#endif
+
+
 
 
 	state = eMT_State_IDLE;
 }
+
+
+
+static void MotorTask_SmState_ServoFxn( void)
+{
+	// raise or lower pen
+
+	write( STDOUT_FILENO, "MotorTask_SmState_ServoFxn\r\n", 29);
+
+	switch( cmd.cmdParams.servoCmdParams.pos)
+	{
+		case 0: // raise pen
+			mtservo_setDuty( i2cfd, 0x00, 200, 400);
+			break;
+
+		case 1: // lower pen
+			mtservo_setDuty( i2cfd, 0x00, 200, 380);
+			break;
+
+		default:
+			break;
+
+	}
+
+	state = eMT_State_IDLE;
+}
+
 
 
 /*
@@ -465,7 +500,11 @@ static void MotorTask_Sm_Run( void)
 
 	case eMT_State_GOTO:
 		MotorTask_SmState_GoToFxn();
-		break;	
+		break;
+
+	case eMT_State_SERVO:
+		MotorTask_SmState_ServoFxn();
+		break;
 
 	default:
 		// invalid state

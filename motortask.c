@@ -350,11 +350,15 @@ static void MotorTask_SmState_StepFxn( void)
 	{
 
 	case eCmd_Motor_Id_MOTORA:
+		digitalWrite( Motor[0].mSigEN, LOW);
 		MotorTask_step( eMT_MotorID_MotorA, cmd.cmdParams.stepCmdParams.steps);
+		digitalWrite( Motor[0].mSigEN, HIGH);
 		break;
 
 	case eCmd_Motor_Id_MOTORB:
+		digitalWrite( Motor[1].mSigEN, LOW);
 		MotorTask_step( eMT_MotorID_MotorB, cmd.cmdParams.stepCmdParams.steps);
+		digitalWrite( Motor[1].mSigEN, HIGH);
 		break;
 
 	default:

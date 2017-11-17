@@ -4,7 +4,7 @@
 #include "mtproto.h"
 
 #define X_LIMIT  280
-#define Y_LIMIT  216
+#define Y_LIMIT  217
 
 
 

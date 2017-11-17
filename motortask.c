@@ -25,7 +25,7 @@
 
 
 //#define DELAY_1_MS  1000000
-#define DELAY_1_MS  1000000
+#define DELAY_1_MS  1000
 #define DELAY_10_MS 10000000
 /* Global (application-wide) variables */
 extern CmdProc_Motor_Cmd_Queue cmdQueue;
@@ -246,7 +246,7 @@ static void* MotorTask_GoTo_StartRoutine( void *arg)
  *  Routine to execute while state machine is in 'Init' state.
  *
  *  Args:     none
- *  
+ * 
  *  Return:   none
  *
  *  Notes:    1) Initial state entered by the motor task FSM; used

@@ -420,6 +420,7 @@ static void MotorTask_SmState_GoToFxn( void)
 	argB.delta = (targetAngles->theta3 - Motor[eMT_MotorID_MotorB].angle) / STEP_ANGLE;
 	argB.mID   = eMT_MotorID_MotorB;
 
+#if 0 // use multithreading
 	/* create sub-thread A */
 	pthread_create( &motorA_threadHandle, NULL, MotorTask_GoTo_StartRoutine, &argA);
 
@@ -429,6 +430,12 @@ static void MotorTask_SmState_GoToFxn( void)
 
 	pthread_join( motorA_threadHandle, NULL);
 	pthread_join( motorB_threadHandle, NULL);
+#else // sequential call to stepping functions
+	MotorTask_step( argA.mID, argA.delta);
+	MotorTask_step( argB.mID, argB.delta);
+#endif
+
+
 
 
 	state = eMT_State_IDLE;

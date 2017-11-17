@@ -25,7 +25,7 @@ s.connect((TCP_IP, TCP_PORT))
 
 for x in xrange(0, 50):
 	time.sleep(0.0005)
-	buf = "AT!MTR_CMD=GOTO,%d,30" % x
+	buf = "AT!MTR_CMD=GOTO,0,%d" % x
 	print "sent:", buf, "\n"
 	s.send(buf)
 	data = s.recv(BUFFER_SIZE)
@@ -34,7 +34,7 @@ for x in xrange(0, 50):
 
 for x in range(50, 0, -1):
         time.sleep(0.0005)
-        buf = "AT!MTR_CMD=GOTO,%d,30" % x
+        buf = "AT!MTR_CMD=GOTO,0,%d" % x
         print "sent:", buf, "\n"
         s.send(buf)
         data = s.recv(BUFFER_SIZE)

@@ -24,6 +24,7 @@ typedef enum
 {
 	eCmd_Motor_Cmd_STEP = 0,
 	eCmd_Motor_Cmd_GOTO,
+	eCmd_Motor_Cmd_SERVO,
 
 	eCmd_NUM_CMDS
 	
@@ -87,6 +88,11 @@ typedef struct CmdProc_Motor_Cmd_Struct
 			unsigned int         posX;
 			unsigned int         posY;
 		} goToCmdParams;
+
+		struct servoCmdParams
+		{
+			unsigned int         pos;
+		} servoCmdParams;
 
 	} cmdParams;
 

@@ -12,7 +12,7 @@ R_AW = transpose([1 0; 0 -1]);
 
 % Position vector; origin axis A to origin axis W; with respect to axis A
 % P_AW = transpose([-89.7 408]);
-P_AW = transpose([-43.18 350]);
+P_AW = transpose([-43.18 355]);
 
 % Position vector; origin axis A to point P; with respect to axis A
 P_AP = P_AW + R_AW*[139;107];

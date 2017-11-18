@@ -24,8 +24,7 @@
 
 
 //#define DELAY_1_MS  1000000
-//#define DELAY_1_MS  120000
-#define DELAY_1_MS  15000
+#define DELAY_1_MS  100000
 #define DELAY_10_MS 10000000
 /* Global (application-wide) variables */
 extern CmdProc_Motor_Cmd_Queue cmdQueue;
@@ -49,8 +48,8 @@ static volatile Motor_Struct        Motor[eMT_NUM_MOTORS] =
 	/* NOTE: wiringPI and BCM28136 pin numbering is different; used shell command 'gpio readll' to determine
 	         appropriate pin numbers when using wiringPi library. Ex: BCM2836 GPIO_PIN_19 = WIRINGPI_PIN_24 */
 
-	/* eMT_MotorID_MotorA */ { .mSigDIR = 24,                   .mSigSTEP = 28,                   .angle = 135901,   .mSigEN = 3 },
-	/* eMT_MotorID_MotorB */ { .mSigDIR = 27,                   .mSigSTEP = 29,                   .angle = 84637,    .mSigEN = 2 },
+	/* eMT_MotorID_MotorA */ { .mSigDIR = 24,                   .mSigSTEP = 28,                   .angle = 131444,   .mSigEN = 3 },
+	/* eMT_MotorID_MotorB */ { .mSigDIR = 27,                   .mSigSTEP = 29,                   .angle = 87407,    .mSigEN = 2 },
 };
 
 /* Local functions */

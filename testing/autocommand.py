@@ -1,7 +1,7 @@
 import socket
 import time
 
-TCP_IP = '192.168.1.75'
+TCP_IP = '172.20.10.3'
 TCP_PORT = 1234
 BUFFER_SIZE = 8
 
@@ -23,22 +23,7 @@ s.connect((TCP_IP, TCP_PORT))
 
 
 
-for x in xrange(0, 50):
-	time.sleep(0.0005)
-	buf = "AT!MTR_CMD=GOTO,0,%d" % x
-	print "sent:", buf, "\n"
-	s.send(buf)
-	data = s.recv(BUFFER_SIZE)
-	print "received:", data
 
-
-for x in range(50, 0, -1):
-        time.sleep(0.0005)
-        buf = "AT!MTR_CMD=GOTO,0,%d" % x
-        print "sent:", buf, "\n"
-        s.send(buf)
-        data = s.recv(BUFFER_SIZE)
-        print "received:", data
 
 
 for x in xrange(0, 50):
